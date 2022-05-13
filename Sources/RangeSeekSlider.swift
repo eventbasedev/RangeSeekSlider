@@ -55,6 +55,7 @@ import UIKit
             if selectedMinValue < minValue {
                 selectedMinValue = minValue
             }
+            refresh()
         }
     }
 
@@ -65,6 +66,7 @@ import UIKit
             if selectedMaxValue > maxValue {
                 selectedMaxValue = maxValue
             }
+            refresh()
         }
     }
 
@@ -162,10 +164,10 @@ import UIKit
             guard let image = handleImage else {
                 return
             }
-            
+
             var handleFrame = CGRect.zero
             handleFrame.size = image.size
-            
+
             leftHandle.frame = handleFrame
             leftHandle.contents = image.cgImage
 
@@ -247,6 +249,7 @@ import UIKit
     // see http://stackoverflow.com/questions/13462046/custom-uiview-not-showing-accessibility-on-voice-over
     private var accessibleElements: [UIAccessibilityElement] = []
 
+    private var refreshBusy: Bool = false
 
     // MARK: - private computed properties
 
@@ -547,7 +550,7 @@ import UIKit
                                                 width: rightHandle.position.x - leftHandle.position.x,
                                                 height: lineHeight)
     }
-    
+
     private func updateLabelPositions() {
         // the center points for the labels are X = the same x position as the relevant handle. Y = the y position of the handle minus half the height of the text label, minus some padding.
 
@@ -566,7 +569,7 @@ import UIKit
 
         let newMaxLabelCenter: CGPoint = CGPoint(x: rightHandle.frame.midX,
                                                  y: rightHandle.frame.maxY + (maxLabelTextSize.height/2) + labelPadding)
-        
+
         let newLeftMostXInMaxLabel: CGFloat = newMaxLabelCenter.x - maxLabelTextSize.width / 2.0
         let newRightMostXInMinLabel: CGFloat = newMinLabelCenter.x + minLabelTextSize.width / 2.0
         let newSpacingBetweenTextLabels: CGFloat = newLeftMostXInMaxLabel - newRightMostXInMinLabel
@@ -620,6 +623,13 @@ import UIKit
     }
 
     fileprivate func refresh() {
+        guard !refreshBusy else {
+            return
+        }
+        
+        refreshBusy = true
+        defer { refreshBusy = false }
+        
         if enableStep && step > 0.0 {
             selectedMinValue = CGFloat(roundf(Float(selectedMinValue / step))) * step
             if let previousStepMinValue = previousStepMinValue, previousStepMinValue != selectedMinValue {
